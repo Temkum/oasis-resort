@@ -124,7 +124,7 @@ export const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.8 }}
-          className="absolute bottom-12 flex flex-col items-center gap-3 text-white/80 hover:text-white transition-colors group"
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-white/80 hover:text-white transition-colors group"
         >
           <span className="text-xs uppercase tracking-widest">Explore</span>
           <ChevronDown className="w-5 h-5 scroll-indicator" />
