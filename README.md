@@ -1,73 +1,89 @@
-# Welcome to your Lovable project
+# Oasis Resort
 
-## Project info
+A luxury hotel website inspired by Four Seasons, built with modern web technologies.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Overview
 
-## How can I edit this code?
+Oasis Resort is a sophisticated, responsive luxury hospitality website featuring elegant design, smooth animations, and immersive user experience. The site showcases premium properties, dining experiences, and exclusive travel services.
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **Hero Section** - Full-screen video background with autoplay controls and scroll indicator
+- **Horizontal Navigation** - Transparent navbar with category icons (Hotels, Residences, Rentals, Dining, Private Jet, Yachts, Winter Travel)
+- **Discover Section** - Themed destination cards with hover effects
+- **Featured Properties Carousel** - Animated property showcase with pagination and navigation
+- **Dining Experiences** - Curated culinary offerings section
+- **New Openings** - Upcoming property announcements with opening dates
+- **History & Legacy** - Brand story with parallax effects and statistics
+- **Responsive Footer** - Comprehensive navigation and social links
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Design System
 
-Changes made via Lovable will be committed automatically to this repo.
+### Typography
+- **Headings**: Playfair Display (serif) with italic emphasis
+- **Body**: DM Sans (sans-serif)
 
-**Use your preferred IDE**
+### Color Palette
+- Primary Black: `#000000`
+- Primary White: `#FFFFFF`
+- Teal Accent: `#1A5F5B`
+- Gold Accent: `#C9A962`
+- Muted tones for backgrounds and text
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Animations
+- Framer Motion for scroll-based animations
+- Smooth transitions and hover effects
+- Video background with play/pause controls
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Tech Stack
 
-Follow these steps:
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Routing**: React Router DOM
+
+## Getting Started
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Navigate to project directory
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Project Structure
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+src/
+├── components/
+│   ├── layout/
+│   │   ├── Navbar.tsx
+│   │   └── Footer.tsx
+│   ├── sections/
+│   │   ├── HeroSection.tsx
+│   │   ├── DiscoverSection.tsx
+│   │   ├── FeaturedPropertiesSection.tsx
+│   │   ├── DiningSection.tsx
+│   │   ├── NewOpeningsSection.tsx
+│   │   └── HistorySection.tsx
+│   └── ui/
+├── pages/
+│   └── Index.tsx
+├── hooks/
+├── lib/
+└── index.css
+```
 
-**Use GitHub Codespaces**
+## License
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project is for demonstration purposes.
