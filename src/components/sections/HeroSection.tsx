@@ -55,32 +55,32 @@ export const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-6">
+      <div className="relative z-10 h-full flex flex-col justify-center text-white px-6 md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-4xl"
+          className="max-w-2xl"
         >
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="text-sm md:text-base uppercase tracking-[0.3em] mb-6 text-white/80"
+            className="text-xs md:text-sm uppercase tracking-[0.3em] mb-6 text-white/70 font-sans"
           >
             Experience Unparalleled Luxury
           </motion.p>
           
-          <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl leading-tight mb-8">
+          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-8">
             <span className="block">Discover the Art of</span>
-            <span className="italic font-light">Extraordinary Living</span>
+            <span className="block italic font-light mt-1">Extraordinary Living</span>
           </h1>
           
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 1.2 }}
-            className="text-base md:text-lg text-white/90 max-w-2xl mx-auto leading-relaxed"
+            className="text-sm md:text-base lg:text-lg text-white/80 max-w-xl leading-relaxed font-light"
           >
             From iconic hotels to private residences, yacht adventures to 
             culinary journeys—every moment with Oasis Resort is crafted for those 
