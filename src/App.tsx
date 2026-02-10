@@ -11,8 +11,11 @@ import { AdminLayout } from '@/components/layout/AdminLayout';
 import { GuestLayout } from '@/components/layout/GuestLayout';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { RoomManagement } from '@/pages/admin/RoomManagement';
+import { RestaurantManagement } from '@/pages/admin/RestaurantManagement';
+import { UserRoleManagement } from '@/pages/admin/UserRoleManagement';
 import { GuestDashboard } from '@/pages/guest/GuestDashboard';
 import { AuthForm } from '@/components/auth/AuthForm';
+import { AdminSetup } from '@/pages/AdminSetup';
 
 const queryClient = new QueryClient();
 
@@ -28,8 +31,9 @@ const App = () => (
             <Route path="/auth" element={<AuthForm />} />
 
             {/* Admin Routes */}
+            <Route path="/admin/setup" element={<AdminSetup />} />
             <Route
-              path="/admin"
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminLayout>
@@ -44,6 +48,26 @@ const App = () => (
                 <ProtectedRoute requiredRole="admin">
                   <AdminLayout>
                     <RoomManagement />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <UserRoleManagement />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/restaurant"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <RestaurantManagement />
                   </AdminLayout>
                 </ProtectedRoute>
               }

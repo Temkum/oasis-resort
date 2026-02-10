@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthForm } from '@/components/auth/AuthForm';
 
@@ -8,6 +9,19 @@ interface ProtectedRouteProps {
   requiredRole?: 'admin' | 'staff' | 'guest';
 }
 
+const FullPageLoader = () => (
+  <div
+    className="flex h-screen w-full flex-col items-center justify-center gap-2 bg-background"
+    role="status"
+    aria-label="Loading authentication state"
+  >
+    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+    <p className="text-sm font-medium text-muted-foreground">
+      Authenticating...
+    </p>
+  </div>
+);
+
 export function ProtectedRoute({
   children,
   requiredRole,
@@ -15,22 +29,23 @@ export function ProtectedRoute({
   const { user, loading, userRole } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <FullPageLoader />;
   }
 
   if (!user) {
     return <AuthForm />;
   }
 
+  // Authorization Logic
   if (requiredRole && userRole !== requiredRole) {
-    // Redirect to appropriate dashboard based on role
-    if (userRole === 'admin') {
-      return <Navigate to="/admin" replace />;
-    } else if (userRole === 'guest') {
-      return <Navigate to="/guest" replace />;
-    } else {
-      return <Navigate to="/" replace />;
-    }
+    const fallbackPath =
+      userRole === 'admin'
+        ? '/admin/dashboard'
+        : userRole === 'guest'
+          ? '/guest'
+          : '/';
+
+    return <Navigate to={fallbackPath} replace />;
   }
 
   return <>{children}</>;
