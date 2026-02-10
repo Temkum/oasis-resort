@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRoomStore } from '@/stores/roomStore';
 import {
   Card,
   CardContent,
@@ -78,9 +79,18 @@ interface Room {
   updated_at: string;
 }
 
+type RoomFormData = Omit<Room, 'id' | 'created_at' | 'updated_at'>;
+
 export function RoomManagement() {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const {
+    isAddRoomModalOpen,
+    isEditRoomModalOpen,
+    currentRoom,
+    openAddRoomModal,
+    closeAddRoomModal,
+    openEditRoomModal,
+    closeEditRoomModal,
+  } = useRoomStore();
   const queryClient = useQueryClient();
 
   const { data: rooms, isLoading } = useQuery({
@@ -112,7 +122,7 @@ export function RoomManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       toast.success('Room created successfully');
-      setIsAddDialogOpen(false);
+      closeAddRoomModal();
     },
     onError: (error) => {
       toast.error('Failed to create room: ' + error.message);
@@ -134,7 +144,7 @@ export function RoomManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       toast.success('Room updated successfully');
-      setEditingRoom(null);
+      closeEditRoomModal();
     },
     onError: (error) => {
       toast.error('Failed to update room: ' + error.message);
@@ -161,7 +171,7 @@ export function RoomManagement() {
     onSubmit,
   }: {
     room?: Room;
-    onSubmit: (data: any) => void;
+    onSubmit: (data: RoomFormData) => void;
   }) => {
     const [formData, setFormData] = useState({
       room_number: room?.room_number || '',
@@ -267,7 +277,7 @@ export function RoomManagement() {
           <Label htmlFor="status">Status</Label>
           <Select
             value={formData.status}
-            onValueChange={(value: any) =>
+            onValueChange={(value: Room['status']) =>
               setFormData((prev) => ({ ...prev, status: value }))
             }
           >
@@ -347,7 +357,7 @@ export function RoomManagement() {
             Manage hotel rooms and availability
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddRoomModalOpen} onOpenChange={closeAddRoomModal}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -483,7 +493,7 @@ export function RoomManagement() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setEditingRoom(room)}
+                    onClick={() => openEditRoomModal(room)}
                   >
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
@@ -504,7 +514,7 @@ export function RoomManagement() {
       </div>
 
       {/* Edit Room Dialog */}
-      <Dialog open={!!editingRoom} onOpenChange={() => setEditingRoom(null)}>
+      <Dialog open={isEditRoomModalOpen} onOpenChange={closeEditRoomModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Room</DialogTitle>
@@ -512,11 +522,11 @@ export function RoomManagement() {
               Update room information and settings
             </DialogDescription>
           </DialogHeader>
-          {editingRoom && (
+          {currentRoom && (
             <RoomForm
-              room={editingRoom}
+              room={currentRoom}
               onSubmit={(data) =>
-                updateRoomMutation.mutate({ id: editingRoom.id, ...data })
+                updateRoomMutation.mutate({ id: currentRoom.id, ...data })
               }
             />
           )}
