@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,7 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -33,7 +33,23 @@ type SignInFormData = z.infer<typeof signInSchema>;
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export function AuthForm() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, userRole, isAdmin, isGuest, isStaff } =
+    useAuth();
+  const navigate = useNavigate();
+  const [signInError, setSignInError] = useState<string | null>(null);
+  const [signUpError, setSignUpError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user && userRole) {
+      if (isAdmin || isStaff) {
+        navigate('/admin/dashboard');
+      } else if (isGuest) {
+        navigate('/guest');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [user, userRole, navigate, isAdmin, isGuest, isStaff]);
 
   const signInForm = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
@@ -44,18 +60,20 @@ export function AuthForm() {
   });
 
   const onSignIn = async (data: SignInFormData) => {
+    setSignInError(null);
     const { error } = await signIn(data.email, data.password);
     if (error) {
-      toast.error(error.message);
+      setSignInError(error.message);
     } else {
       toast.success('Signed in successfully');
     }
   };
 
   const onSignUp = async (data: SignUpFormData) => {
+    setSignUpError(null);
     const { error } = await signUp(data.email, data.password, data.fullName);
     if (error) {
-      toast.error(error.message);
+      setSignUpError(error.message);
     } else {
       toast.success('Account created successfully');
     }
@@ -118,6 +136,11 @@ export function AuthForm() {
                     )}
                   </div>
                 </CardContent>
+                {signInError && (
+                  <div className="px-6 pb-4">
+                    <p className="text-sm text-red-600">{signInError}</p>
+                  </div>
+                )}
                 <CardFooter>
                   <Button type="submit" className="w-full">
                     Sign In
@@ -178,6 +201,11 @@ export function AuthForm() {
                     )}
                   </div>
                 </CardContent>
+                {signUpError && (
+                  <div className="px-6 pb-4">
+                    <p className="text-sm text-red-600">{signUpError}</p>
+                  </div>
+                )}
                 <CardFooter>
                   <Button type="submit" className="w-full">
                     Sign Up
