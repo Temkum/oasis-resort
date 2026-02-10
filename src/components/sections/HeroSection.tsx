@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Play, Pause, ChevronDown, Volume2, VolumeX } from "lucide-react";
+import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Play, Pause, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 
 export const HeroSection = () => {
   const [isPlaying, setIsPlaying] = useState(true);
@@ -28,7 +28,7 @@ export const HeroSection = () => {
   const scrollToContent = () => {
     window.scrollTo({
       top: window.innerHeight,
-      behavior: "smooth",
+      behavior: 'smooth',
     });
   };
 
@@ -71,21 +71,23 @@ export const HeroSection = () => {
           >
             Experience Unparalleled Luxury
           </motion.p>
-          
+
           <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-8">
             <span className="block">Discover the Art of</span>
-            <span className="block italic font-light mt-1">Extraordinary Living</span>
+            <span className="block italic font-light mt-1">
+              Extraordinary Living
+            </span>
           </h1>
-          
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 1.2 }}
             className="text-sm md:text-base lg:text-lg text-white/80 max-w-xl leading-relaxed font-light"
           >
-            From iconic hotels to private residences, yacht adventures to 
-            culinary journeys—every moment with Oasis Resort is crafted for those 
-            who seek the exceptional.
+            From iconic hotels to private residences, hiking adventures to
+            culinary journeys—every moment with Oasis Resort is crafted for
+            those who seek the exceptional.
           </motion.p>
         </motion.div>
 
@@ -105,7 +107,7 @@ export const HeroSection = () => {
             ) : (
               <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
             )}
-            <span>{isPlaying ? "Pause" : "Play"}</span>
+            <span>{isPlaying ? 'Pause' : 'Play'}</span>
           </button>
           <button
             onClick={toggleMute}

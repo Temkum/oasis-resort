@@ -1,52 +1,49 @@
-import { motion } from "framer-motion";
-import { 
-  Facebook, 
-  Instagram, 
-  Twitter, 
-  Youtube, 
+import { motion } from 'framer-motion';
+import {
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
   Linkedin,
   Mail,
   Phone,
-  MapPin
-} from "lucide-react";
+} from 'lucide-react';
 
 const footerLinks = {
   explore: [
-    { name: "Hotels & Resorts", href: "#" },
-    { name: "Private Residences", href: "#" },
-    { name: "Luxury Rentals", href: "#" },
-    { name: "Restaurants & Bars", href: "#" },
-    { name: "Spa & Wellness", href: "#" },
+    { name: 'Hotels & Resorts', href: '#' },
+    { name: 'Private Residences', href: '#' },
+    { name: 'Luxury Rentals', href: '#' },
+    { name: 'Restaurants & Bars', href: '#' },
+    { name: 'Spa & Wellness', href: '#' },
   ],
   experiences: [
-    { name: "Private Jet", href: "#" },
-    { name: "Yacht Charter", href: "#" },
-    { name: "Winter Travel", href: "#" },
-    { name: "Safari Adventures", href: "#" },
-    { name: "Cultural Journeys", href: "#" },
+    { name: 'Holiday Travel', href: '#' },
+    { name: 'Hiking Adventures', href: '#' },
+    { name: 'Cultural Journeys', href: '#' },
   ],
   company: [
-    { name: "About Us", href: "#" },
-    { name: "Careers", href: "#" },
-    { name: "Press Room", href: "#" },
-    { name: "Sustainability", href: "#" },
-    { name: "Investor Relations", href: "#" },
+    { name: 'About Us', href: '#' },
+    { name: 'Careers', href: '#' },
+    { name: 'Press Room', href: '#' },
+    { name: 'Sustainability', href: '#' },
+    { name: 'Investor Relations', href: '#' },
   ],
   support: [
-    { name: "Contact Us", href: "#" },
-    { name: "Gift Cards", href: "#" },
-    { name: "FAQs", href: "#" },
-    { name: "Privacy Policy", href: "#" },
-    { name: "Terms of Service", href: "#" },
+    { name: 'Contact Us', href: '#' },
+    { name: 'Gift Cards', href: '#' },
+    { name: 'FAQs', href: '#' },
+    { name: 'Privacy Policy', href: '#' },
+    { name: 'Terms of Service', href: '#' },
   ],
 };
 
 const socialLinks = [
-  { icon: Facebook, href: "#", label: "Facebook" },
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Twitter, href: "#", label: "Twitter" },
-  { icon: Youtube, href: "#", label: "YouTube" },
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: Facebook, href: '#', label: 'Facebook' },
+  { icon: Instagram, href: '#', label: 'Instagram' },
+  { icon: Twitter, href: '#', label: 'Twitter' },
+  { icon: Youtube, href: '#', label: 'YouTube' },
+  { icon: Linkedin, href: '#', label: 'LinkedIn' },
 ];
 
 export const Footer = () => {
@@ -64,21 +61,21 @@ export const Footer = () => {
               </span>
             </a>
             <p className="text-background/70 text-sm leading-relaxed mb-6 max-w-xs">
-              Redefining luxury hospitality with exceptional properties 
-              and personalized experiences around the world.
+              Redefining luxury hospitality with exceptional properties and
+              personalized experiences around the world.
             </p>
-            
+
             {/* Contact Info */}
             <div className="space-y-3">
-              <a 
-                href="tel:+18005551234" 
+              <a
+                href="tel:+18005551234"
                 className="flex items-center gap-3 text-sm text-background/70 hover:text-background transition-colors"
               >
                 <Phone className="w-4 h-4" />
                 +1 800 555 1234
               </a>
-              <a 
-                href="mailto:reservations@oasisresort.com" 
+              <a
+                href="mailto:reservations@oasisresort.com"
                 className="flex items-center gap-3 text-sm text-background/70 hover:text-background transition-colors"
               >
                 <Mail className="w-4 h-4" />
@@ -93,8 +90,8 @@ export const Footer = () => {
             <ul className="space-y-3">
               {footerLinks.explore.map((link) => (
                 <li key={link.name}>
-                  <a 
-                    href={link.href} 
+                  <a
+                    href={link.href}
                     className="text-sm text-background/70 hover:text-background transition-colors"
                   >
                     {link.name}
@@ -105,12 +102,14 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-xs uppercase tracking-widest mb-6">Experiences</h4>
+            <h4 className="text-xs uppercase tracking-widest mb-6">
+              Experiences
+            </h4>
             <ul className="space-y-3">
               {footerLinks.experiences.map((link) => (
                 <li key={link.name}>
-                  <a 
-                    href={link.href} 
+                  <a
+                    href={link.href}
                     className="text-sm text-background/70 hover:text-background transition-colors"
                   >
                     {link.name}
@@ -125,8 +124,8 @@ export const Footer = () => {
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
-                  <a 
-                    href={link.href} 
+                  <a
+                    href={link.href}
                     className="text-sm text-background/70 hover:text-background transition-colors"
                   >
                     {link.name}
@@ -141,8 +140,8 @@ export const Footer = () => {
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
-                  <a 
-                    href={link.href} 
+                  <a
+                    href={link.href}
                     className="text-sm text-background/70 hover:text-background transition-colors"
                   >
                     {link.name}
@@ -160,7 +159,7 @@ export const Footer = () => {
           <p className="text-xs text-background/50">
             © {new Date().getFullYear()} Oasis Resort. All rights reserved.
           </p>
-          
+
           {/* Social Links */}
           <div className="flex items-center gap-4">
             {socialLinks.map((social) => (

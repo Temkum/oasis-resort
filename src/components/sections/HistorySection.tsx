@@ -1,10 +1,10 @@
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 
 export const HistorySection = () => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
     <section ref={ref} className="relative py-32 md:py-48 overflow-hidden">
@@ -27,18 +27,17 @@ export const HistorySection = () => {
           className="max-w-3xl mx-auto text-center text-white"
         >
           <p className="text-xs uppercase tracking-[0.3em] text-teal-light mb-6">
-            Since 1960
+            Since 2020
           </p>
-          
+
           <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl mb-8">
             A Legacy of <span className="italic">Excellence</span>
           </h2>
-          
+
           <p className="text-lg md:text-xl text-white/80 leading-relaxed mb-12">
-            For over six decades, Oasis Resort has set the standard for 
-            luxury hospitality. From our first property to a global collection 
-            spanning five continents, our commitment to exceptional service 
-            and timeless elegance remains unwavering.
+            For over 6 years, Oasis Resort has set the standard for luxury
+            hospitality. Located in the heart of the city, our commitment to
+            exceptional service and timeless elegance remains unwavering.
           </p>
 
           <motion.a
@@ -61,10 +60,10 @@ export const HistorySection = () => {
           className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 pt-16 border-t border-white/20"
         >
           {[
-            { value: "130+", label: "Properties Worldwide" },
-            { value: "50+", label: "Countries" },
-            { value: "65", label: "Years of Excellence" },
-            { value: "5", label: "Star Service" },
+            { value: '130+', label: 'Rooms' },
+            { value: '50+', label: 'Bathrooms' },
+            { value: '6', label: 'Years of Excellence' },
+            { value: '5', label: 'Star Service' },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
