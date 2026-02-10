@@ -4,7 +4,9 @@ import { supabase } from '@/lib/supabase';
 import type { Database } from '@/lib/database.types';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
-type UserRole = Database['public']['Enums']['app_role'];
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+type UserRole = 'admin' | 'staff' | 'guest';
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +25,7 @@ interface AuthContextType {
   ) => Promise<{ error: { message: string } | null }>;
   signOut: () => Promise<void>;
   updateProfile: (
-    updates: Partial<Profile>,
+    updates: ProfileUpdate,
   ) => Promise<{ error: { message: string } | null }>;
   hasRole: (role: UserRole) => boolean;
   isAdmin: boolean;
@@ -48,10 +50,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', userId)
         .single();
 
-      if (profileError) {
+      if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error fetching profile:', profileError);
       } else if (profileData) {
         setProfile(profileData);
+      } else {
+        // Profile doesn't exist, create it
+        const { data: user } = await supabase.auth.getUser();
+        const fullName = user.user?.user_metadata?.full_name || null;
+        const insertData: ProfileInsert = {
+          user_id: userId,
+          full_name: fullName,
+        };
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert(insertData as any)
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+        } else {
+          setProfile(newProfile);
+        }
       }
 
       const { data: roleData, error: roleError } = await supabase
@@ -60,10 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', userId)
         .single();
 
-      if (roleError) {
+      if (roleError && roleError.code !== 'PGRST116') {
         console.error('Error fetching role:', roleError);
+        setUserRole('guest'); // Default to guest if no role found
       } else if (roleData) {
-        setUserRole(roleData.role as UserRole);
+        setUserRole(roleData as UserRole);
+      } else {
+        setUserRole('guest'); // Default to guest if no role data
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -136,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(updates as any)
       .eq('user_id', user.id);
 
     if (!error) {

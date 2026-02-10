@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
@@ -11,6 +12,7 @@ import {
   User,
   Globe,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navCategories = [
   { name: 'Hotels', icon: Building2 },
@@ -23,6 +25,9 @@ const navCategories = [
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,16 +80,30 @@ export const Navbar = () => {
             </a>
 
             <div className="flex items-center gap-4">
-              <button
-                className={`hidden sm:flex items-center gap-2 text-xs uppercase tracking-widest transition-colors ${
-                  isScrolled
-                    ? 'text-muted-foreground hover:text-foreground'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                <span>Account</span>
-              </button>
+              {user ? (
+                <button
+                  className={`hidden sm:flex items-center gap-2 text-xs uppercase tracking-widest transition-colors ${
+                    isScrolled
+                      ? 'text-muted-foreground hover:text-foreground'
+                      : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  <span>Account</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/auth')}
+                  className={`hidden sm:flex items-center gap-2 text-xs uppercase tracking-widest transition-colors ${
+                    isScrolled
+                      ? 'text-muted-foreground hover:text-foreground'
+                      : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  <span>Login</span>
+                </button>
+              )}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={`lg:hidden p-2 transition-colors ${
