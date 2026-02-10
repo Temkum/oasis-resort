@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Card,
   CardContent,
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserWithRole {
   id: string;
@@ -43,59 +45,18 @@ interface UserWithRole {
 }
 
 export function AdminSetup() {
+  const { isAdmin, user } = useAuth();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'admin' | 'staff' | 'guest'>('guest');
-  const [loading, setLoading] = useState(false);
-  const [fetchingUsers, setFetchingUsers] = useState(false);
-  const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Check if current user is admin
-  const checkAdminStatus = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setError('Not authenticated');
-        return;
-      }
-
-      setCurrentUser(user.email || null);
-
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (roleError) {
-        console.error('Error checking admin status:', roleError);
-        setError('Unable to verify admin status');
-        return;
-      }
-
-      setIsAdmin(roleData?.role === 'admin');
-
-      if (roleData?.role !== 'admin') {
-        setError('You do not have admin privileges to access this page');
-      }
-    } catch (err) {
-      console.error('Error checking admin status:', err);
-      setError('Failed to verify permissions');
-    }
-  };
-
-  // Fetch users from the secure Edge Function
-  const fetchUsers = async () => {
-    if (!isAdmin) return;
-
-    setFetchingUsers(true);
-    setError(null);
-
-    try {
+  const {
+    data: users,
+    isLoading: fetchingUsers,
+    error: usersError,
+  } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -105,7 +66,7 @@ export function AdminSetup() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-users`,
+        `${process.env.VITE_SUPABASE_URL}/functions/v1/get-users`,
         {
           method: 'GET',
           headers: {
@@ -121,34 +82,13 @@ export function AdminSetup() {
       }
 
       const data = await response.json();
-      setUsers(data.users || []);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch users';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setFetchingUsers(false);
-    }
-  };
+      return data.users || [];
+    },
+    enabled: !!isAdmin,
+  });
 
-  // Assign role via the secure Edge Function
-  const assignRole = async () => {
-    if (!email.trim()) {
-      toast.error('Please enter an email address');
-      return;
-    }
-
-    if (!isAdmin) {
-      toast.error('Unauthorized - Admin access required');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
+  const assignRoleMutation = useMutation({
+    mutationFn: async ({ email, role }: { email: string; role: string }) => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -174,35 +114,18 @@ export function AdminSetup() {
         throw new Error(errorData.error || 'Failed to assign role');
       }
 
-      const data = await response.json();
+      return response.json();
+    },
+    onSuccess: (data) => {
       toast.success(data.message || `Role ${role} assigned successfully`);
       setEmail('');
       setRole('guest');
-
-      // Refresh user list
-      await fetchUsers();
-    } catch (err) {
-      console.error('Error assigning role:', err);
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to assign role';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Initialize on mount
-  useEffect(() => {
-    checkAdminStatus();
-  }, []);
-
-  // Fetch users when admin status is confirmed
-  useEffect(() => {
-    if (isAdmin) {
-      fetchUsers();
-    }
-  }, [isAdmin]);
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   const getRoleIcon = (userRole: string) => {
     switch (userRole) {
@@ -227,7 +150,7 @@ export function AdminSetup() {
   };
 
   // Show error state for non-admins
-  if (error && !isAdmin) {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
@@ -239,7 +162,9 @@ export function AdminSetup() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                You do not have admin privileges to access this page
+              </AlertDescription>
             </Alert>
             <Button
               onClick={() => (window.location.href = '/')}
@@ -264,17 +189,17 @@ export function AdminSetup() {
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             Assign admin roles to users
           </p>
-          {currentUser && (
+          {user?.email && (
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-              Logged in as: {currentUser}
+              Logged in as: {user.email}
             </p>
           )}
         </div>
 
-        {error && (
+        {usersError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{usersError.message}</AlertDescription>
           </Alert>
         )}
 
@@ -298,10 +223,10 @@ export function AdminSetup() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="user@example.com"
-                  disabled={loading || !isAdmin}
+                  disabled={assignRoleMutation.isPending || !isAdmin}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      assignRole();
+                      assignRoleMutation.mutate({ email, role });
                     }
                   }}
                 />
@@ -313,7 +238,7 @@ export function AdminSetup() {
                   onValueChange={(value: 'admin' | 'staff' | 'guest') =>
                     setRole(value)
                   }
-                  disabled={loading || !isAdmin}
+                  disabled={assignRoleMutation.isPending || !isAdmin}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -342,11 +267,11 @@ export function AdminSetup() {
               </div>
               <div className="flex items-end">
                 <Button
-                  onClick={assignRole}
-                  disabled={loading || !email.trim() || !isAdmin}
+                  onClick={() => assignRoleMutation.mutate({ email, role })}
+                  disabled={assignRoleMutation.isPending || !email.trim()}
                   className="w-full"
                 >
-                  {loading ? (
+                  {assignRoleMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Assigning...
@@ -372,8 +297,10 @@ export function AdminSetup() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={fetchUsers}
-                disabled={fetchingUsers || !isAdmin}
+                onClick={() =>
+                  queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+                }
+                disabled={fetchingUsers}
               >
                 {fetchingUsers ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -404,7 +331,7 @@ export function AdminSetup() {
                         <p className="font-medium text-gray-900 dark:text-white">
                           {user.email}
                         </p>
-                        {user.email === currentUser && (
+                        {user.email === user?.email && (
                           <Badge variant="outline" className="text-xs">
                             You
                           </Badge>
