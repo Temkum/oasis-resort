@@ -86,7 +86,7 @@ export const HeroSection = () => {
             className="text-sm md:text-base lg:text-lg text-white/80 max-w-xl leading-relaxed font-light"
           >
             From iconic hotels to private residences, hiking adventures to
-            culinary journeys—every moment with Oasis Resort is crafted for
+            culinary journeys, every moment with Oasis Resort is crafted for
             those who seek the exceptional.
           </motion.p>
         </motion.div>

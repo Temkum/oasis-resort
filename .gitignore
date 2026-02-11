@@ -23,10 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environments
+# Environment files
 .env
 .env.local
+.env.development
+.env.production
 .env.*.local
-.env.*
+
+# Never commit these
+**/*SERVICE_ROLE*
+**/*SECRET*
 
 Todo.md
