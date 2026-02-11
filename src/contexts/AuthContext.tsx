@@ -1,12 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
-import type { Database } from '@/lib/database.types';
+import { supabase } from '@/integrations/supabase/client';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
-type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 type UserRole = 'admin' | 'staff' | 'guest';
+
+interface Profile {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -14,19 +20,10 @@ interface AuthContextType {
   userRole: UserRole | null;
   session: Session | null;
   loading: boolean;
-  signIn: (
-    email: string,
-    password: string,
-  ) => Promise<{ error: { message: string } | null }>;
-  signUp: (
-    email: string,
-    password: string,
-    fullName: string,
-  ) => Promise<{ error: { message: string } | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: { message: string } | null }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: { message: string } | null }>;
   signOut: () => Promise<void>;
-  updateProfile: (
-    updates: ProfileUpdate,
-  ) => Promise<{ error: { message: string } | null }>;
+  updateProfile: (updates: Partial<Profile>) => Promise<{ error: { message: string } | null }>;
   hasRole: (role: UserRole) => boolean;
   isAdmin: boolean;
   isStaff: boolean;
@@ -43,58 +40,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    console.log('[AuthContext] fetchProfile starting for:', userId);
     try {
-      console.log('[AuthContext] Fetching profile table...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
-      
-      console.log('[AuthContext] Profile fetch result:', { profileData, profileError });
 
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error fetching profile:', profileError);
       } else if (profileData) {
-        setProfile(profileData);
-      } else {
-        // Profile doesn't exist, create it
-        const { data: user } = await supabase.auth.getUser();
-        const fullName = user.user?.user_metadata?.full_name || null;
-        const insertData: ProfileInsert = {
-          user_id: userId,
-          full_name: fullName,
-        };
-        const { data: newProfile, error: insertError } = await supabase
-          .from('profiles')
-          .insert(insertData as any)
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-        } else {
-          setProfile(newProfile);
-        }
+        setProfile(profileData as unknown as Profile);
       }
 
-      console.log('[AuthContext] Fetching user_roles table...');
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single<{ role: UserRole }>();
-
-      console.log('[AuthContext] Role fetch result:', { roleData, roleError });
+        .single();
 
       if (roleError && roleError.code !== 'PGRST116') {
         console.error('Error fetching role:', roleError);
-        setUserRole('guest'); // Default to guest if no role found
+        setUserRole('guest');
       } else if (roleData) {
-        setUserRole(roleData.role);
+        setUserRole(roleData.role as UserRole);
       } else {
-        setUserRole('guest'); // Default to guest if no role data
+        setUserRole('guest');
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -102,33 +73,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const getSession = async () => {
-      console.log('[AuthContext] getSession starting');
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      console.log('[AuthContext] Session retrieved, user:', session?.user?.id);
-
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      }
-
-      console.log('[AuthContext] getSession complete, setting loading false');
-      setLoading(false);
-    };
-
-    getSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        // Use setTimeout to avoid potential deadlocks with Supabase auth
+        setTimeout(() => fetchProfile(session.user.id), 0);
       } else {
         setProfile(null);
         setUserRole(null);
@@ -137,14 +89,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
+    // THEN check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
     return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? { message: error.message } : null };
   };
 
@@ -152,11 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
+      options: { data: { full_name: fullName } },
     });
     return { error: error ? { message: error.message } : null };
   };
@@ -165,12 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const updateProfile = async (updates: ProfileUpdate) => {
+  const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: { message: 'No user logged in' } };
 
     const { error } = await supabase
       .from('profiles')
-      .update(updates as Database['public']['Tables']['profiles']['Update'])
+      .update(updates as any)
       .eq('user_id', user.id);
 
     if (!error) {
@@ -180,13 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? { message: error.message } : null };
   };
 
-  const hasRole = (role: UserRole): boolean => {
-    return userRole === role;
-  };
-
-  const isAdmin = hasRole('admin');
-  const isStaff = hasRole('staff');
-  const isGuest = hasRole('guest');
+  const hasRole = (role: UserRole): boolean => userRole === role;
 
   const value: AuthContextType = {
     user,
@@ -199,9 +150,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateProfile,
     hasRole,
-    isAdmin,
-    isStaff,
-    isGuest,
+    isAdmin: hasRole('admin'),
+    isStaff: hasRole('staff'),
+    isGuest: hasRole('guest'),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

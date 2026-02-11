@@ -39,7 +39,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const roomTypes = [
@@ -179,6 +179,7 @@ export function RoomManagement() {
       capacity: room?.capacity || 2,
       price_per_night: room?.price_per_night || 100,
       amenities: room?.amenities || [],
+      images: room?.images || [],
       description: room?.description || '',
       status: room?.status || ('available' as const),
     });
