@@ -39,7 +39,7 @@ export function AuthForm() {
   const [signInError, setSignInError] = useState<string | null>(null);
   const [signUpError, setSignUpError] = useState<string | null>(null);
 
-  console.log('AuthForm Rendered - user:', user, 'userRole:', userRole);
+
 
   useEffect(() => {
     // Only redirect when userRole is not null
@@ -48,8 +48,10 @@ export function AuthForm() {
         navigate('/admin/dashboard');
       } else if (isGuest) {
         navigate('/guest');
+      } else {
+        // Fallback for unknown roles
+        navigate('/');
       }
-      // Do not redirect to '/' by default; let the user stay on the page if role is unknown
     }
   }, [user, userRole, navigate, isAdmin, isGuest, isStaff]);
 

@@ -43,12 +43,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
+    console.log('[AuthContext] fetchProfile starting for:', userId);
     try {
+      console.log('[AuthContext] Fetching profile table...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
+      
+      console.log('[AuthContext] Profile fetch result:', { profileData, profileError });
 
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error fetching profile:', profileError);
@@ -75,17 +79,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      console.log('[AuthContext] Fetching user_roles table...');
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .single<{ role: UserRole }>();
+
+      console.log('[AuthContext] Role fetch result:', { roleData, roleError });
 
       if (roleError && roleError.code !== 'PGRST116') {
         console.error('Error fetching role:', roleError);
         setUserRole('guest'); // Default to guest if no role found
       } else if (roleData) {
-        setUserRole(roleData as UserRole);
+        setUserRole(roleData.role);
       } else {
         setUserRole('guest'); // Default to guest if no role data
       }
@@ -96,16 +103,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getSession = async () => {
+      console.log('[AuthContext] getSession starting');
       const {
         data: { session },
       } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+      console.log('[AuthContext] Session retrieved, user:', session?.user?.id);
 
       if (session?.user) {
         await fetchProfile(session.user.id);
       }
 
+      console.log('[AuthContext] getSession complete, setting loading false');
       setLoading(false);
     };
 
@@ -155,12 +165,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const updateProfile = async (updates: Partial<Profile>) => {
+  const updateProfile = async (updates: ProfileUpdate) => {
     if (!user) return { error: { message: 'No user logged in' } };
 
     const { error } = await supabase
       .from('profiles')
-      .update(updates as any)
+      .update(updates as Database['public']['Tables']['profiles']['Update'])
       .eq('user_id', user.id);
 
     if (!error) {

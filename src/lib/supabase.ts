@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -9,9 +9,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Singleton pattern to avoid multiple GoTrueClient instances
-let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
+let supabaseInstance: SupabaseClient<Database> | null = null;
 
-export const supabase = (() => {
+export const supabase: SupabaseClient<Database> = (() => {
   if (!supabaseInstance) {
     supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {

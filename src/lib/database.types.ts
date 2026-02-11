@@ -62,7 +62,8 @@ export interface Database {
     Functions: {
       has_role: {
         Args: {
-          role: 'admin' | 'staff' | 'guest';
+          _user_id: string;
+          _role: 'admin' | 'staff' | 'guest';
         };
         Returns: boolean;
       };

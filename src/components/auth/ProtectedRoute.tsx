@@ -41,9 +41,11 @@ export function ProtectedRoute({
     const fallbackPath =
       userRole === 'admin'
         ? '/admin/dashboard'
-        : userRole === 'guest'
-          ? '/guest'
-          : '/';
+        : userRole === 'staff'
+          ? '/admin/dashboard'
+          : userRole === 'guest'
+            ? '/guest'
+            : '/';
 
     return <Navigate to={fallbackPath} replace />;
   }
