@@ -28,7 +28,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Shield, Users, Crown, Settings } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ProfileWithRole {
@@ -53,19 +53,27 @@ export function UserRoleManagement() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users-with-roles'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('profiles').select(`
-          *,
-          user_roles(role),
-          auth.users(email)
-        `);
+      // Fetch profiles and roles separately (can't join auth.users from client)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      return data.map((profile: any) => ({
-        ...profile,
-        email: profile.auth.users?.email || 'Unknown',
-        role: profile.user_roles?.[0]?.role || 'guest',
-      })) as ProfileWithRole[];
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) throw rolesError;
+
+      return (profiles || []).map((profile: any) => {
+        const userRole = roles?.find((r: any) => r.user_id === profile.user_id);
+        return {
+          ...profile,
+          email: profile.full_name || 'Unknown',
+          role: userRole?.role || 'guest',
+        } as ProfileWithRole;
+      });
     },
   });
 
