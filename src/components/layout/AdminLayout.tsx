@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Rooms', href: '/admin/rooms', icon: Bed },
   { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
   { name: 'Restaurant', href: '/admin/restaurant', icon: Utensils },
@@ -29,7 +29,7 @@ const navigation = [
   { name: 'Pricing', href: '/admin/pricing', icon: DollarSign },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'Settings', href: '/admin/setup', icon: Settings },
 ];
 
 interface AdminLayoutProps {

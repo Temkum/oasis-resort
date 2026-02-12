@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
@@ -89,7 +89,9 @@ export const Navbar = () => {
                   }`}
                 >
                   <User className="w-4 h-4" />
-                  <span>Account</span>
+                  <span>
+                    <Link to="/admin/dashboard">Account</Link>
+                  </span>
                 </button>
               ) : (
                 <button

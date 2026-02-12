@@ -38,22 +38,24 @@ export function AuthForm() {
   const navigate = useNavigate();
   const [signInError, setSignInError] = useState<string | null>(null);
   const [signUpError, setSignUpError] = useState<string | null>(null);
-
-
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    // Only redirect when userRole is not null
-    if (user && userRole) {
+    // Only redirect when BOTH user AND userRole are loaded
+    if (user && userRole && !redirecting) {
+      console.log('Redirecting user with role:', userRole);
+      setRedirecting(true);
+
       if (isAdmin || isStaff) {
-        navigate('/admin/dashboard');
+        navigate('/admin/dashboard', { replace: true });
       } else if (isGuest) {
-        navigate('/guest');
+        navigate('/guest', { replace: true });
       } else {
         // Fallback for unknown roles
-        navigate('/');
+        navigate('/', { replace: true });
       }
     }
-  }, [user, userRole, navigate, isAdmin, isGuest, isStaff]);
+  }, [user, userRole, navigate, isAdmin, isGuest, isStaff, redirecting]);
 
   const signInForm = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
@@ -65,21 +67,31 @@ export function AuthForm() {
 
   const onSignIn = async (data: SignInFormData) => {
     setSignInError(null);
+    setRedirecting(false);
+
     const { error } = await signIn(data.email, data.password);
+
     if (error) {
       setSignInError(error.message);
+      toast.error(error.message);
     } else {
       toast.success('Signed in successfully');
+      // Don't navigate here - let the useEffect handle it
     }
   };
 
   const onSignUp = async (data: SignUpFormData) => {
     setSignUpError(null);
+    setRedirecting(false);
+
     const { error } = await signUp(data.email, data.password, data.fullName);
+
     if (error) {
       setSignUpError(error.message);
+      toast.error(error.message);
     } else {
       toast.success('Account created successfully');
+      // Don't navigate here - let the useEffect handle it
     }
   };
 
@@ -146,8 +158,12 @@ export function AuthForm() {
                   </div>
                 )}
                 <CardFooter>
-                  <Button type="submit" className="w-full">
-                    Sign In
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={redirecting}
+                  >
+                    {redirecting ? 'Redirecting...' : 'Sign In'}
                   </Button>
                 </CardFooter>
               </form>
@@ -211,8 +227,12 @@ export function AuthForm() {
                   </div>
                 )}
                 <CardFooter>
-                  <Button type="submit" className="w-full">
-                    Sign Up
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={redirecting}
+                  >
+                    {redirecting ? 'Creating account...' : 'Sign Up'}
                   </Button>
                 </CardFooter>
               </form>

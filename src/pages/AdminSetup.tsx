@@ -31,6 +31,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 interface UserWithRole {
   id: string;
@@ -57,16 +58,19 @@ export function AdminSetup() {
   } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
+      console.log('AdminSetup: Starting to fetch users');
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
+      console.log('AdminSetup: Session exists?', !!session);
       if (!session) {
         throw new Error('No active session');
       }
 
+      console.log('AdminSetup: Making fetch request to get-users');
       const response = await fetch(
-        `${process.env.VITE_SUPABASE_URL}/functions/v1/get-users`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-users`,
         {
           method: 'GET',
           headers: {
@@ -76,13 +80,29 @@ export function AdminSetup() {
         },
       );
 
+      console.log(
+        'AdminSetup: Response received, ok?',
+        response.ok,
+        'status:',
+        response.status,
+      );
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('AdminSetup: Fetch error data:', errorData);
         throw new Error(errorData.error || 'Failed to fetch users');
       }
 
       const data = await response.json();
-      return data.users || [];
+      console.log('AdminSetup: Raw response data:', data);
+      const users = data.users || [];
+      console.log('AdminSetup: Processed users array length:', users.length);
+      users.forEach((user, index) => {
+        console.log(
+          `AdminSetup: User ${index + 1}: email=${user.email}, role=${user.role}, full_name=${user.full_name}, email_confirmed=${user.email_confirmed}`,
+        );
+      });
+      console.log('AdminSetup: Returning users:', users);
+      return users;
     },
     enabled: !!isAdmin,
   });
@@ -98,7 +118,7 @@ export function AdminSetup() {
       }
 
       const response = await fetch(
-        `${process.env.VITE_SUPABASE_URL}/functions/v1/assign-role`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/assign-role`,
         {
           method: 'POST',
           headers: {
@@ -178,6 +198,8 @@ export function AdminSetup() {
       </div>
     );
   }
+
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -268,7 +290,7 @@ export function AdminSetup() {
               <div className="flex items-end">
                 <Button
                   onClick={() => assignRoleMutation.mutate({ email, role })}
-                  disabled={assignRoleMutation.isPending || !email.trim()}
+                  disabled={assignRoleMutation.isPending || !isValidEmail}
                   className="w-full"
                 >
                   {assignRoleMutation.isPending ? (
@@ -315,41 +337,41 @@ export function AdminSetup() {
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
               </div>
-            ) : users.length === 0 ? (
+            ) : (users || []).length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 No users found
               </div>
             ) : (
               <div className="space-y-3">
-                {users.map((user) => (
+                {(users || []).map((displayUser) => (
                   <div
-                    key={user.id}
+                    key={displayUser.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-gray-900 dark:text-white">
-                          {user.email}
+                          {displayUser.email}
                         </p>
-                        {user.email === user?.email && (
+                        {displayUser.email === user?.email && (
                           <Badge variant="outline" className="text-xs">
                             You
                           </Badge>
                         )}
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {user.full_name || 'No name set'}
+                        {displayUser.full_name || 'No name set'}
                       </p>
-                      {!user.email_confirmed && (
+                      {!displayUser.email_confirmed && (
                         <p className="text-xs text-amber-600 dark:text-amber-400">
                           Email not confirmed
                         </p>
                       )}
                     </div>
-                    <Badge className={getRoleColor(user.role)}>
+                    <Badge className={getRoleColor(displayUser.role)}>
                       <span className="flex items-center gap-1">
-                        {getRoleIcon(user.role)}
-                        <span className="capitalize">{user.role}</span>
+                        {getRoleIcon(displayUser.role)}
+                        <span className="capitalize">{displayUser.role}</span>
                       </span>
                     </Badge>
                   </div>
@@ -360,11 +382,8 @@ export function AdminSetup() {
         </Card>
 
         <div className="text-center">
-          <Button
-            onClick={() => (window.location.href = '/')}
-            variant="outline"
-          >
-            Go to Homepage
+          <Button variant="outline">
+            <Link href="/admin/dashboard">Back to Dashboard</Link>
           </Button>
         </div>
       </div>

@@ -1,14 +1,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 
+interface ProfileWithRole {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  user_roles: Array<{ role: string }>;
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Get authenticated user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -20,19 +27,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create admin client (server-side only)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      },
+      { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
-    // Verify the requester is authenticated
     const token = authHeader.replace('Bearer ', '');
     const {
       data: { user },
@@ -49,7 +49,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if requester is an admin
     const { data: requesterRole, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
@@ -57,48 +56,66 @@ Deno.serve(async (req) => {
       .single();
 
     if (roleError || requesterRole?.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: usersData, error: usersError } = await supabaseAdmin
+      .from('profiles')
+      .select(
+        `
+        id,
+        user_id,
+        full_name,
+        avatar_url,
+        created_at,
+        user_roles(role)
+      `,
+      )
+      .order('created_at', { ascending: false });
+
+    if (usersError) {
+      console.error('Profile fetch failed:', usersError.code);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - Admin access required' }),
+        JSON.stringify({ error: 'Failed to fetch user data' }),
         {
-          status: 403,
+          status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         },
       );
     }
 
-    // Fetch all profiles
-    const { data: profiles, error: profilesError } = await supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (profilesError) {
-      throw profilesError;
+    if (!usersData || usersData.length === 0) {
+      return new Response(JSON.stringify({ users: [] }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    // Fetch all auth users
     const {
-      data: { users },
-      error: usersError,
-    } = await supabaseAdmin.auth.admin.listUsers();
+      data: { users: authUsers },
+      error: authError,
+    } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
 
-    if (usersError) {
-      throw usersError;
+    if (authError) {
+      console.error('Auth fetch failed:', authError.code);
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch auth data' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
-    // Fetch all user roles
-    const { data: userRoles, error: rolesError } = await supabaseAdmin
-      .from('user_roles')
-      .select('*');
+    const authUsersMap = new Map((authUsers ?? []).map((u) => [u.id, u]));
 
-    if (rolesError) {
-      throw rolesError;
-    }
-
-    // Combine data
-    const usersWithDetails = profiles.map((profile) => {
-      const authUser = users.find((u) => u.id === profile.user_id);
-      const userRole = userRoles?.find((r) => r.user_id === profile.user_id);
+    const usersWithDetails = (usersData as ProfileWithRole[]).map((profile) => {
+      const authUser = authUsersMap.get(profile.user_id);
+      const roleData =
+        profile.user_roles?.length > 0 ? profile.user_roles[0] : null;
 
       return {
         id: profile.id,
@@ -106,10 +123,10 @@ Deno.serve(async (req) => {
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
         created_at: profile.created_at,
-        email: authUser?.email || 'Unknown',
-        role: userRole?.role || 'guest',
-        email_confirmed: authUser?.email_confirmed_at ? true : false,
-        last_sign_in: authUser?.last_sign_in_at,
+        email: authUser?.email ?? 'Unknown',
+        role: roleData?.role ?? 'guest',
+        email_confirmed: !!authUser?.email_confirmed_at,
+        last_sign_in: authUser?.last_sign_in_at ?? null,
       };
     });
 
@@ -118,13 +135,13 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
-    console.error('Error in get-users function:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+    console.error(
+      'Unexpected error:',
+      error instanceof Error ? error.message : 'Unknown',
     );
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
