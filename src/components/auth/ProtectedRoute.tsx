@@ -85,12 +85,10 @@ export function ProtectedRoute({
     return <TimeoutError onRetry={handleRetry} />;
   }
 
-  // Show loader while checking auth
   if (loading) {
     return <FullPageLoader />;
   }
 
-  // No user - show auth form
   if (!user) {
     return <AuthForm />;
   }
@@ -103,17 +101,15 @@ export function ProtectedRoute({
   // Authorization check - redirect if role doesn't match
   if (requiredRole && userRole !== requiredRole) {
     // Staff can access admin routes
-    if (requiredRole === 'admin' && userRole === 'staff') {
+    if (
+      (requiredRole === 'admin' && userRole === 'staff') ||
+      (requiredRole === 'guest' && userRole === 'guest')
+    ) {
       return <>{children}</>;
     }
 
-    // Otherwise redirect to appropriate dashboard
-    const fallbackPath =
-      userRole === 'admin' || userRole === 'staff'
-        ? '/admin/dashboard'
-        : userRole === 'guest'
-          ? '/guest'
-          : '/';
+    // Otherwise redirect to home page
+    const fallbackPath = '/';
 
     console.log('Redirecting to:', fallbackPath);
     return <Navigate to={fallbackPath} replace />;

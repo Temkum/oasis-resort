@@ -383,7 +383,7 @@ export function AdminSetup() {
 
         <div className="text-center">
           <Button variant="outline">
-            <Link href="/admin/dashboard">Back to Dashboard</Link>
+            <Link to="/admin/dashboard">Back to Dashboard</Link>
           </Button>
         </div>
       </div>
